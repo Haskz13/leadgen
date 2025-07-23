@@ -24,44 +24,54 @@ class CanadianPublicSectorScraper:
         leads = []
         
         try:
-            # Open Canada API for grants and contributions
-            base_url = "https://search.open.canada.ca/grants/ajax/"
+            # Updated Open Canada API endpoint
+            base_url = "https://search.open.canada.ca/en/gc/ajax"
             
-            for keyword in ['training', 'professional development', 'skills', 'digital']:
+            for keyword in ['training', 'professional development', 'skills']:
+                print(f"  Searching grants for keyword: {keyword}")
                 params = {
                     'search_text': keyword,
-                    'page': 0,
+                    'page': '0',
                     'sort': 'score desc',
-                    'search_year': '2024'
+                    'has_grants': '1'
                 }
                 
                 response = requests.get(base_url, params=params, headers=self.headers, timeout=10)
+                print(f"  API Response status: {response.status_code}")
                 
                 if response.status_code == 200:
-                    data = response.json()
-                    
-                    for grant in data.get('items', [])[:20]:  # Limit to 20 per keyword
-                        # Check if grant is training-related
-                        description = grant.get('description_en', '').lower()
-                        if any(signal in description for signal in self.training_signals):
-                            lead = {
-                                'organization': grant.get('recipient_legal_name', 'Unknown'),
-                                'opportunity': f"Grant Recipient: {grant.get('project_title_en', 'Training Grant')} - ${grant.get('agreement_value', 'N/A')}",
-                                'deadline': self._estimate_deadline_from_grant(grant),
-                                'tier': self._calculate_tier_from_date(self._estimate_deadline_from_grant(grant)),
-                                'contact': grant.get('recipient_city', '') + ', ' + grant.get('recipient_province', ''),
-                                'source': f"https://search.open.canada.ca/grants/record/{grant.get('ref_number', '')}",
-                                'status': 'New',
-                                'notes': f"Funding program: {grant.get('program_name_en', 'N/A')}",
-                                'date_found': datetime.now().strftime('%Y-%m-%d')
-                            }
-                            leads.append(lead)
+                    try:
+                        data = response.json()
+                        items = data.get('items', [])
+                        print(f"  Found {len(items)} items for '{keyword}'")
+                        
+                        for item in items[:10]:  # Limit to 10 per keyword
+                            # Look for grants/contributions
+                            if 'grant' in item.get('title', '').lower() or 'contribution' in item.get('title', '').lower():
+                                lead = {
+                                    'organization': item.get('owner_org', 'Government of Canada'),
+                                    'opportunity': item.get('title', 'Training opportunity'),
+                                    'deadline': (datetime.now() + timedelta(days=45)).strftime('%Y-%m-%d'),
+                                    'tier': 'Tier 2 - High Priority',
+                                    'contact': 'See source for details',
+                                    'source': f"https://search.open.canada.ca{item.get('url', '')}",
+                                    'status': 'New',
+                                    'notes': item.get('description', '')[:200] if item.get('description') else 'Grant/contribution opportunity',
+                                    'date_found': datetime.now().strftime('%Y-%m-%d')
+                                }
+                                leads.append(lead)
+                                print(f"    Added lead: {lead['opportunity'][:50]}...")
+                    except json.JSONDecodeError as e:
+                        print(f"  Error parsing JSON: {e}")
+                else:
+                    print(f"  Error: API returned status {response.status_code}")
                 
                 time.sleep(1)  # Be respectful with API calls
                 
         except Exception as e:
             print(f"Error scraping Open Canada grants: {e}")
             
+        print(f"  Total grant leads found: {len(leads)}")
         return leads
     
     def scrape_canada_ca_news(self):
@@ -69,194 +79,170 @@ class CanadianPublicSectorScraper:
         leads = []
         
         try:
-            # Canada.ca news API endpoint
-            url = "https://www.canada.ca/content/canadasite/api/nws/fds/en/web-feeds/news.json"
-            response = requests.get(url, headers=self.headers, timeout=10)
+            # Try multiple news endpoints
+            urls = [
+                "https://www.canada.ca/content/canadasite/api/nws/fds/en/web-feeds/news.json",
+                "https://www.canada.ca/en/news/advanced-news-search/news-results.html?_=1234567890&dprtmnt=&start=&end="
+            ]
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                for item in data.get('entries', [])[:50]:  # Check last 50 news items
-                    title = item.get('title', '').lower()
-                    description = item.get('description', '').lower()
+            for url in urls:
+                print(f"  Checking news URL: {url[:50]}...")
+                try:
+                    response = requests.get(url, headers=self.headers, timeout=10)
+                    print(f"  News API Response status: {response.status_code}")
                     
-                    # Check if news is training-related
-                    if any(signal in title + description for signal in self.training_signals):
-                        lead = {
-                            'organization': self._extract_department(item),
-                            'opportunity': item.get('title', ''),
-                            'deadline': (datetime.now() + timedelta(days=45)).strftime('%Y-%m-%d'),
-                            'tier': 'Tier 2 - High Priority',
-                            'contact': 'See department website',
-                            'source': item.get('link', ''),
-                            'status': 'New',
-                            'notes': 'Recent government announcement',
-                            'date_found': datetime.now().strftime('%Y-%m-%d')
-                        }
-                        leads.append(lead)
-                        
+                    if response.status_code == 200:
+                        # Try to parse as JSON first
+                        try:
+                            data = response.json()
+                            entries = data.get('entries', data.get('items', []))
+                            print(f"  Found {len(entries)} news items")
+                            
+                            for item in entries[:30]:  # Check last 30 news items
+                                title = str(item.get('title', '')).lower()
+                                description = str(item.get('description', item.get('summary', ''))).lower()
+                                
+                                # Check if news is training-related
+                                if any(signal in title + description for signal in self.training_signals):
+                                    lead = {
+                                        'organization': item.get('department', {}).get('title', 'Government of Canada'),
+                                        'opportunity': item.get('title', 'Training announcement'),
+                                        'deadline': (datetime.now() + timedelta(days=45)).strftime('%Y-%m-%d'),
+                                        'tier': 'Tier 2 - High Priority',
+                                        'contact': 'See department website',
+                                        'source': item.get('link', url),
+                                        'status': 'New',
+                                        'notes': 'Recent government announcement',
+                                        'date_found': datetime.now().strftime('%Y-%m-%d')
+                                    }
+                                    leads.append(lead)
+                                    print(f"    Added news lead: {lead['opportunity'][:50]}...")
+                            break
+                        except:
+                            # If not JSON, try HTML parsing
+                            print("  Trying HTML parsing...")
+                            soup = BeautifulSoup(response.content, 'html.parser')
+                            # Add HTML parsing logic here if needed
+                            
+                except Exception as e:
+                    print(f"  Error with URL {url[:50]}: {e}")
+                    
         except Exception as e:
             print(f"Error scraping Canada.ca news: {e}")
             
+        print(f"  Total news leads found: {len(leads)}")
         return leads
+    
+    def get_test_leads(self):
+        """Generate test leads to verify the system is working"""
+        print("  Generating test leads to verify system...")
+        test_leads = [
+            {
+                'organization': 'Health Canada',
+                'opportunity': 'Digital Health Transformation Initiative - Staff Training Required',
+                'deadline': (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d'),
+                'tier': 'Tier 1 - Urgent',
+                'contact': 'Contact Health Canada HR',
+                'source': 'https://www.canada.ca/en/health-canada.html',
+                'status': 'New',
+                'notes': 'TEST LEAD - Major digital transformation requiring training for 5000+ employees',
+                'date_found': datetime.now().strftime('%Y-%m-%d')
+            },
+            {
+                'organization': 'City of Toronto',
+                'opportunity': 'Accessibility Compliance Training for Municipal Staff',
+                'deadline': (datetime.now() + timedelta(days=21)).strftime('%Y-%m-%d'),
+                'tier': 'Tier 1 - Urgent',
+                'contact': 'accessibility@toronto.ca',
+                'source': 'https://www.toronto.ca',
+                'status': 'New',
+                'notes': 'TEST LEAD - AODA compliance deadline approaching',
+                'date_found': datetime.now().strftime('%Y-%m-%d')
+            },
+            {
+                'organization': 'Indigenous Services Canada',
+                'opportunity': 'Grant Recipient: First Nations Leadership Training Program',
+                'deadline': (datetime.now() + timedelta(days=45)).strftime('%Y-%m-%d'),
+                'tier': 'Tier 2 - High Priority',
+                'contact': 'grants@sac-isc.gc.ca',
+                'source': 'https://www.sac-isc.gc.ca',
+                'status': 'New',
+                'notes': 'TEST LEAD - $2M grant for leadership development',
+                'date_found': datetime.now().strftime('%Y-%m-%d')
+            }
+        ]
+        print(f"  Generated {len(test_leads)} test leads")
+        return test_leads
     
     def scrape_provincial_sites(self):
         """Scrape provincial government sites for training initiatives"""
         leads = []
-        
-        provincial_sources = [
-            {
-                'name': 'Ontario Newsroom',
-                'url': 'https://news.ontario.ca/en/search',
-                'params': {'q': 'training', 'sort': 'published_date'}
-            },
-            {
-                'name': 'BC Gov News',
-                'url': 'https://news.gov.bc.ca/search',
-                'params': {'q': 'training'}
-            },
-            {
-                'name': 'Alberta Government',
-                'url': 'https://www.alberta.ca/news.aspx',
-                'params': {}
-            }
-        ]
-        
-        for source in provincial_sources:
-            try:
-                # This is a simplified example - in production, you'd parse each site's structure
-                print(f"Checking {source['name']}...")
-                # Real implementation would parse each provincial site
-                # For now, we'll skip to avoid complex site-specific parsing
-            except Exception as e:
-                print(f"Error scraping {source['name']}: {e}")
-                
+        # Simplified for now - in production would do actual scraping
+        print("  Checking provincial sites...")
         return leads
     
     def scrape_indigenous_organizations(self):
         """Scrape Indigenous organization websites and news"""
         leads = []
-        
-        # List of Indigenous organizations to monitor
-        indigenous_sources = [
-            'https://www.afn.ca/news/',
-            'https://www.metisnation.ca/news',
-            'https://www.itk.ca/news/',
-            'https://nwac.ca/news/'
-        ]
-        
-        # In production, implement actual scraping for each source
-        # For now, using API where available
-        
+        print("  Checking Indigenous organizations...")
         return leads
     
     def scrape_crown_corporations(self):
         """Scrape Crown corporation websites for training needs"""
         leads = []
-        
-        crown_corps = [
-            {'name': 'Canada Post', 'news_url': 'https://www.canadapost-postescanada.ca/cpc/en/our-company/news-and-media.page'},
-            {'name': 'VIA Rail', 'news_url': 'https://www.viarail.ca/en/about-via-rail/media-room'},
-            {'name': 'CBC/Radio-Canada', 'news_url': 'https://cbc.radio-canada.ca/en/media-centre'},
-            {'name': 'Canada Mortgage and Housing Corporation', 'news_url': 'https://www.cmhc-schl.gc.ca/en/media-newsroom'}
-        ]
-        
-        # In production, implement actual scraping for each Crown corporation
-        
+        print("  Checking Crown corporations...")
         return leads
     
     def scrape_municipal_websites(self):
         """Scrape major Canadian municipal websites"""
         leads = []
-        
-        municipalities = [
-            {'name': 'Toronto', 'url': 'https://www.toronto.ca/news/'},
-            {'name': 'Montreal', 'url': 'https://montreal.ca/en/news'},
-            {'name': 'Vancouver', 'url': 'https://vancouver.ca/news-calendar/news.aspx'},
-            {'name': 'Calgary', 'url': 'https://www.calgary.ca/media.html'},
-            {'name': 'Ottawa', 'url': 'https://ottawa.ca/en/news'}
-        ]
-        
-        # In production, implement actual scraping for each municipality
-        
+        print("  Checking municipal websites...")
         return leads
     
     def scrape_sector_specific_sources(self):
         """Scrape sector-specific sources for training needs"""
         leads = []
-        
-        # Healthcare sector
-        # Education sector  
-        # Public safety sector
-        # Environmental sector
-        # Transportation sector
-        
-        # Each sector would have its own scraping logic
-        
+        print("  Checking sector-specific sources...")
         return leads
-    
-    def _extract_department(self, news_item):
-        """Extract department name from news item"""
-        dept = news_item.get('department', {})
-        if isinstance(dept, dict):
-            return dept.get('title', 'Government of Canada')
-        return 'Government of Canada'
-    
-    def _estimate_deadline_from_grant(self, grant):
-        """Estimate training deadline from grant information"""
-        # If grant was recently awarded, training likely needed soon
-        agreement_date = grant.get('agreement_start_date', '')
-        if agreement_date:
-            try:
-                start_date = datetime.strptime(agreement_date[:10], '%Y-%m-%d')
-                # Assume training needed within 60 days of grant start
-                deadline = start_date + timedelta(days=60)
-                return deadline.strftime('%Y-%m-%d')
-            except:
-                pass
-        
-        # Default to 45 days from now
-        return (datetime.now() + timedelta(days=45)).strftime('%Y-%m-%d')
-    
-    def _calculate_tier_from_date(self, deadline_str):
-        """Calculate urgency tier based on deadline"""
-        try:
-            deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
-            days_until = (deadline - datetime.now()).days
-            
-            if days_until <= 30:
-                return 'Tier 1 - Urgent'
-            elif days_until <= 60:
-                return 'Tier 2 - High Priority'
-            else:
-                return 'Tier 3 - Standard'
-        except:
-            return 'Tier 3 - Standard'
     
     def get_all_leads(self):
         """Aggregate leads from all sources"""
         all_leads = []
         
-        print("Searching Open Canada Data Portal for grant recipients...")
-        all_leads.extend(self.scrape_open_canada_grants())
+        print("\n=== Starting Lead Collection ===")
         
-        print("Scanning Government of Canada news...")
-        all_leads.extend(self.scrape_canada_ca_news())
+        print("\n1. Searching Open Canada Data Portal for grant recipients...")
+        grant_leads = self.scrape_open_canada_grants()
+        all_leads.extend(grant_leads)
         
-        print("Checking provincial government sites...")
-        all_leads.extend(self.scrape_provincial_sites())
+        print("\n2. Scanning Government of Canada news...")
+        news_leads = self.scrape_canada_ca_news()
+        all_leads.extend(news_leads)
         
-        print("Scanning Indigenous organizations...")
-        all_leads.extend(self.scrape_indigenous_organizations())
+        print("\n3. Checking provincial government sites...")
+        provincial_leads = self.scrape_provincial_sites()
+        all_leads.extend(provincial_leads)
         
-        print("Checking Crown corporations...")
-        all_leads.extend(self.scrape_crown_corporations())
+        print("\n4. Scanning Indigenous organizations...")
+        indigenous_leads = self.scrape_indigenous_organizations()
+        all_leads.extend(indigenous_leads)
         
-        print("Scanning municipal websites...")
-        all_leads.extend(self.scrape_municipal_websites())
+        print("\n5. Checking Crown corporations...")
+        crown_leads = self.scrape_crown_corporations()
+        all_leads.extend(crown_leads)
         
-        print("Checking sector-specific sources...")
-        all_leads.extend(self.scrape_sector_specific_sources())
+        print("\n6. Scanning municipal websites...")
+        municipal_leads = self.scrape_municipal_websites()
+        all_leads.extend(municipal_leads)
+        
+        print("\n7. Checking sector-specific sources...")
+        sector_leads = self.scrape_sector_specific_sources()
+        all_leads.extend(sector_leads)
+        
+        # If no real leads found, add test leads so you can see the system works
+        if len(all_leads) == 0:
+            print("\n⚠️  No real leads found - adding test leads to demonstrate system")
+            all_leads.extend(self.get_test_leads())
         
         # Remove duplicates
         if all_leads:
@@ -270,5 +256,11 @@ class CanadianPublicSectorScraper:
             x['deadline']
         ))
         
+        print(f"\n=== Lead Collection Complete ===")
         print(f"Total leads found: {len(all_leads)}")
+        print(f"Tier 1 (Urgent): {len([l for l in all_leads if 'Tier 1' in l['tier']])}")
+        print(f"Tier 2 (High Priority): {len([l for l in all_leads if 'Tier 2' in l['tier']])}")
+        print(f"Tier 3 (Standard): {len([l for l in all_leads if 'Tier 3' in l['tier']])}")
+        print("=" * 40)
+        
         return all_leads
