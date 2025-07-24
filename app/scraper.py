@@ -27,42 +27,43 @@ class CanadianPublicSectorScraper:
         """Search for recent grant recipients who received funding for training"""
         leads = []
         
-        # Specific searches for grant recipients
+        # Specific searches for grant recipients in 2025/2026
         grant_searches = [
-            "site:canada.ca grant recipient training 2024 2025",
-            "site:ontario.ca \"funding recipient\" professional development 2024",
-            "\"Indigenous Services Canada\" grant training capacity building 2024",
-            "ESDC \"skills development\" funding recipient 2024",
-            "\"Innovation Canada\" digital skills grant recipient",
-            "site:alberta.ca workforce development grant awarded 2024",
-            "site:gov.bc.ca training grant recipient announcement"
+            "site:canada.ca grant recipient training 2025 2026",
+            "site:ontario.ca \"funding recipient\" professional development 2025",
+            "\"Indigenous Services Canada\" grant training capacity building 2025",
+            "ESDC \"skills development\" funding recipient 2025",
+            "\"Innovation Canada\" digital skills grant recipient 2025",
+            "site:alberta.ca workforce development grant awarded 2025",
+            "site:gov.bc.ca training grant recipient announcement 2025",
+            "\"fiscal year 2025-2026\" training grant Canada"
         ]
         
-        print("\n📊 Searching for Training Grant Recipients...")
+        print("\n📊 Searching for Training Grant Recipients (2025/2026)...")
         
         # These searches would find real grant recipients
         # For demonstration, showing what types of leads would be found
         potential_leads = [
             {
                 'organization': 'First Nations Technology Council',
-                'opportunity': 'Recipient of $3.2M Digital Skills Training Grant from ISED',
+                'opportunity': 'Recipient of $3.2M Digital Skills Training Grant from ISED (2025-2026)',
                 'deadline': (datetime.now() + timedelta(days=45)).strftime('%Y-%m-%d'),
                 'tier': 'Tier 2 - High Priority',
                 'contact': 'Contact FNTC for partnership opportunities',
                 'source': 'https://www.canada.ca/en/innovation-science-economic-development',
                 'status': 'New',
-                'notes': 'Grant for indigenous youth digital skills training across BC',
+                'notes': 'Grant for indigenous youth digital skills training across BC - FY 2025-26',
                 'date_found': datetime.now().strftime('%Y-%m-%d')
             },
             {
                 'organization': 'Ontario Hospital Association',
-                'opportunity': 'Awarded $5M for Healthcare Digital Transformation Training',
+                'opportunity': 'Awarded $5M for Healthcare Digital Transformation Training (2025)',
                 'deadline': (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d'),
                 'tier': 'Tier 1 - Urgent',
                 'contact': 'training@oha.com',
                 'source': 'https://news.ontario.ca/en/',
                 'status': 'New',
-                'notes': 'Training 10,000+ healthcare workers on new EMR system',
+                'notes': 'Training 10,000+ healthcare workers on new EMR system by Q3 2025',
                 'date_found': datetime.now().strftime('%Y-%m-%d')
             }
         ]
@@ -78,26 +79,27 @@ class CanadianPublicSectorScraper:
         leads = []
         
         transformation_searches = [
-            "\"Government of Canada\" digital transformation employee training 2024",
-            "CRA modernization staff training announcement",
-            "\"Service Canada\" new system rollout training",
-            "\"Health Canada\" digital health initiative training",
-            "RCMP modernization training program 2024",
-            "\"Parks Canada\" reservation system training staff"
+            "\"Government of Canada\" digital transformation employee training 2025",
+            "CRA modernization staff training announcement 2025",
+            "\"Service Canada\" new system rollout training 2025",
+            "\"Health Canada\" digital health initiative training 2025",
+            "RCMP modernization training program 2025 2026",
+            "\"Parks Canada\" reservation system training staff 2025",
+            "federal government \"Phoenix replacement\" training 2025"
         ]
         
-        print("\n🔄 Searching for Digital Transformation Initiatives...")
+        print("\n🔄 Searching for Digital Transformation Initiatives (2025/2026)...")
         
         potential_leads = [
             {
                 'organization': 'Canada Revenue Agency',
-                'opportunity': 'CRA Digital Services Transformation - 8,000 Staff Need Training',
+                'opportunity': 'CRA Digital Services Transformation - 8,000 Staff Need Training by July 2025',
                 'deadline': (datetime.now() + timedelta(days=25)).strftime('%Y-%m-%d'),
                 'tier': 'Tier 1 - Urgent',
                 'contact': 'Contact CRA Transformation Office',
                 'source': 'https://www.canada.ca/en/revenue-agency',
                 'status': 'New',
-                'notes': 'Major modernization of tax systems requiring extensive training',
+                'notes': 'Major modernization of tax systems for 2025 tax year - extensive training required',
                 'date_found': datetime.now().strftime('%Y-%m-%d')
             }
         ]
@@ -113,26 +115,28 @@ class CanadianPublicSectorScraper:
         leads = []
         
         compliance_searches = [
-            "accessibility training mandate Ontario AODA 2024 deadline",
-            "\"City of Toronto\" mandatory training all staff 2024",
-            "\"privacy training\" requirement federal employees 2024",
-            "\"workplace safety\" training mandate construction Ontario",
-            "\"Truth and Reconciliation\" training mandatory government",
-            "cybersecurity training requirement municipality Canada 2024"
+            "accessibility training mandate Ontario AODA 2025 deadline",
+            "\"City of Toronto\" mandatory training all staff 2025",
+            "\"privacy training\" requirement federal employees 2025",
+            "\"workplace safety\" training mandate construction Ontario 2025",
+            "\"Truth and Reconciliation\" training mandatory government 2025",
+            "cybersecurity training requirement municipality Canada 2025",
+            "Bill C-27 privacy training requirement 2025",
+            "\"climate action\" training public sector 2025"
         ]
         
-        print("\n⚖️ Searching for Compliance Training Mandates...")
+        print("\n⚖️ Searching for Compliance Training Mandates (2025)...")
         
         potential_leads = [
             {
                 'organization': 'City of Toronto',
-                'opportunity': 'AODA Compliance Training Required for 35,000 City Staff by July 2024',
+                'opportunity': 'AODA Compliance Training Required for 35,000 City Staff by July 2025',
                 'deadline': (datetime.now() + timedelta(days=20)).strftime('%Y-%m-%d'),
                 'tier': 'Tier 1 - Urgent',
                 'contact': 'accessibility@toronto.ca',
                 'source': 'https://www.toronto.ca/city-government/accessibility-human-rights',
                 'status': 'New',
-                'notes': 'Mandatory accessibility training deadline approaching',
+                'notes': 'Mandatory accessibility training deadline July 31, 2025',
                 'date_found': datetime.now().strftime('%Y-%m-%d')
             }
         ]
@@ -148,25 +152,26 @@ class CanadianPublicSectorScraper:
         leads = []
         
         indigenous_searches = [
-            "AFN Assembly First Nations training program announcement 2024",
-            "\"Indigenous Services Canada\" capacity building initiative",
-            "Metis Nation skills development program 2024",
-            "\"First Nations Health Authority\" training partnership",
-            "indigenous leadership development program funding 2024"
+            "AFN Assembly First Nations training program announcement 2025",
+            "\"Indigenous Services Canada\" capacity building initiative 2025",
+            "Metis Nation skills development program 2025 2026",
+            "\"First Nations Health Authority\" training partnership 2025",
+            "indigenous leadership development program funding 2025",
+            "\"United Nations Declaration\" training implementation 2025"
         ]
         
-        print("\n🪶 Searching for Indigenous Training Initiatives...")
+        print("\n🪶 Searching for Indigenous Training Initiatives (2025/2026)...")
         
         potential_leads = [
             {
                 'organization': 'Assembly of First Nations',
-                'opportunity': 'National Indigenous Leadership Development Program Launch',
+                'opportunity': 'National Indigenous Leadership Development Program Launch - 2025 Cohort',
                 'deadline': (datetime.now() + timedelta(days=35)).strftime('%Y-%m-%d'),
                 'tier': 'Tier 2 - High Priority',
                 'contact': 'education@afn.ca',
                 'source': 'https://www.afn.ca',
                 'status': 'New',
-                'notes': 'Seeking training providers for national program',
+                'notes': 'Seeking training providers for 2025-2026 national program',
                 'date_found': datetime.now().strftime('%Y-%m-%d')
             }
         ]
@@ -182,13 +187,14 @@ class CanadianPublicSectorScraper:
         leads = []
         
         crown_searches = [
-            "Canada Post modernization employee training 2024",
-            "VIA Rail safety certification training announcement",
-            "CBC digital transformation staff development",
-            "Canada Mortgage Housing Corporation training initiative"
+            "Canada Post modernization employee training 2025",
+            "VIA Rail safety certification training announcement 2025",
+            "CBC digital transformation staff development 2025",
+            "Canada Mortgage Housing Corporation training initiative 2025",
+            "Crown corporation training requirements 2025"
         ]
         
-        print("\n🏢 Searching for Crown Corporation Training Needs...")
+        print("\n🏢 Searching for Crown Corporation Training Needs (2025)...")
         
         for search_query in crown_searches[:2]:
             print(f"  Searching: {search_query}")
@@ -201,13 +207,14 @@ class CanadianPublicSectorScraper:
         leads = []
         
         municipal_searches = [
-            "City of Vancouver employee training program 2024",
-            "Montreal formation professionnelle employés municipaux",
-            "Calgary emergency response training initiative",
-            "Ottawa digital services training staff"
+            "City of Vancouver employee training program 2025",
+            "Montreal formation professionnelle employés municipaux 2025",
+            "Calgary emergency response training initiative 2025",
+            "Ottawa digital services training staff 2025",
+            "municipal climate action training 2025"
         ]
         
-        print("\n🏛️ Searching for Municipal Training Programs...")
+        print("\n🏛️ Searching for Municipal Training Programs (2025)...")
         
         for search_query in municipal_searches[:2]:
             print(f"  Searching: {search_query}")
@@ -220,24 +227,25 @@ class CanadianPublicSectorScraper:
         leads = []
         
         sector_searches = [
-            "Ontario healthcare training mandate 2024 deadline",
-            "education sector professional development requirement 2024",
-            "public safety training certification Canada 2024",
-            "environmental compliance training government Canada"
+            "Ontario healthcare training mandate 2025 deadline",
+            "education sector professional development requirement 2025 2026",
+            "public safety training certification Canada 2025",
+            "environmental compliance training government Canada 2025",
+            "long-term care training requirements Ontario 2025"
         ]
         
-        print("\n🏥 Searching for Sector-Specific Training Needs...")
+        print("\n🏥 Searching for Sector-Specific Training Needs (2025/2026)...")
         
         potential_leads = [
             {
                 'organization': 'Ontario Ministry of Health',
-                'opportunity': 'Province-Wide Healthcare Worker Mental Health Training Initiative',
+                'opportunity': 'Province-Wide Healthcare Worker Mental Health Training Initiative (2025-2026)',
                 'deadline': (datetime.now() + timedelta(days=40)).strftime('%Y-%m-%d'),
                 'tier': 'Tier 2 - High Priority',
                 'contact': 'Contact regional health integration networks',
                 'source': 'https://www.ontario.ca/page/ministry-health',
                 'status': 'New',
-                'notes': 'Training for 150,000+ healthcare workers across Ontario',
+                'notes': 'Training for 150,000+ healthcare workers across Ontario by end of 2025',
                 'date_found': datetime.now().strftime('%Y-%m-%d')
             }
         ]
@@ -253,7 +261,7 @@ class CanadianPublicSectorScraper:
         all_leads = []
         
         print("\n" + "="*60)
-        print("🚀 CANADIAN PUBLIC SECTOR TRAINING LEAD SEARCH")
+        print("🚀 CANADIAN PUBLIC SECTOR TRAINING LEAD SEARCH (2025/2026)")
         print("="*60)
         
         # Search for grant recipients
@@ -304,7 +312,7 @@ class CanadianPublicSectorScraper:
         ))
         
         print("\n" + "="*60)
-        print(f"📊 SEARCH COMPLETE - SUMMARY")
+        print(f"📊 SEARCH COMPLETE - SUMMARY FOR 2025/2026")
         print("="*60)
         print(f"Total leads found: {len(all_leads)}")
         print(f"  🔴 Tier 1 (Urgent): {len([l for l in all_leads if 'Tier 1' in l['tier']])}")
@@ -314,7 +322,7 @@ class CanadianPublicSectorScraper:
         
         # Note about implementation
         if len(all_leads) < 10:
-            print("💡 NOTE: This is a demonstration with sample leads.")
+            print("💡 NOTE: This is a demonstration with sample 2025/2026 leads.")
             print("   In production, this would use real web search APIs to find")
             print("   hundreds of current opportunities across Canada.")
             print("   Consider integrating Google Custom Search API or similar.\n")

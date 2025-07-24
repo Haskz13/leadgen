@@ -136,7 +136,8 @@ class AdvancedTrainingLeadSearcher:
             'grant recipient', 'awarded funding', 'training program',
             'seeking providers', 'RFP', 'tender', 'mandatory training',
             'digital transformation', 'system implementation',
-            'compliance deadline', 'certification required'
+            'compliance deadline', 'certification required',
+            '2025', '2026', 'fiscal year 2025', 'FY 2025-26'
         ]
         
         text = f"{result.get('title', '')} {result.get('snippet', '')}".lower()
@@ -162,10 +163,14 @@ class AdvancedTrainingLeadSearcher:
         # Look for deadline indicators
         if any(word in snippet for word in ['urgent', 'immediate', 'asap']):
             days = 14
-        elif any(word in snippet for word in ['deadline', 'by july', 'summer']):
+        elif any(word in snippet for word in ['deadline', 'by july', 'summer 2025']):
             days = 30
-        elif 'q3' in snippet or 'fall' in snippet:
+        elif 'q3 2025' in snippet or 'fall 2025' in snippet:
             days = 60
+        elif 'q4 2025' in snippet or 'winter 2025' in snippet:
+            days = 90
+        elif '2026' in snippet:
+            days = 180
         else:
             days = 45
         
@@ -178,11 +183,11 @@ class AdvancedTrainingLeadSearcher:
         snippet = result.get('snippet', '').lower()
         
         # Tier 1 indicators
-        if any(word in snippet for word in ['urgent', 'immediate', 'deadline approaching']):
+        if any(word in snippet for word in ['urgent', 'immediate', 'deadline approaching', 'july 2025']):
             return 'Tier 1 - Urgent'
         
         # Tier 2 indicators
-        if any(word in snippet for word in ['new', 'announced', 'launching']):
+        if any(word in snippet for word in ['new', 'announced', 'launching', 'q3 2025']):
             return 'Tier 2 - High Priority'
         
         return 'Tier 3 - Standard'
@@ -193,33 +198,38 @@ class AdvancedTrainingLeadSearcher:
         """
         all_leads = []
         
-        # Define search queries for different types of opportunities
+        # Define search queries for different types of opportunities (2025/2026)
         search_queries = {
             'grant_recipients': [
-                '"grant recipient" training "professional development" site:canada.ca 2024',
-                'ESDC "skills development" "funding awarded" 2024',
-                '"Indigenous Services Canada" grant training "capacity building"'
+                '"grant recipient" training "professional development" site:canada.ca 2025',
+                'ESDC "skills development" "funding awarded" 2025 2026',
+                '"Indigenous Services Canada" grant training "capacity building" 2025',
+                '"fiscal year 2025-2026" training grant Canada',
+                '"FY 2025-26" professional development funding'
             ],
             'digital_transformations': [
-                '"Government of Canada" "digital transformation" "employee training"',
-                'CRA "modernization" "staff training" announcement',
-                '"Service Canada" "new system" training rollout'
+                '"Government of Canada" "digital transformation" "employee training" 2025',
+                'CRA "modernization" "staff training" announcement 2025',
+                '"Service Canada" "new system" training rollout 2025',
+                '"Phoenix replacement" training implementation 2025 2026'
             ],
             'compliance_mandates': [
-                'AODA "compliance training" deadline 2024 Ontario',
-                '"mandatory training" "all staff" government Canada 2024',
-                '"Truth and Reconciliation" training requirement government'
+                'AODA "compliance training" deadline 2025 Ontario',
+                '"mandatory training" "all staff" government Canada 2025',
+                '"Truth and Reconciliation" training requirement government 2025',
+                'Bill C-27 "privacy training" requirement 2025 2026'
             ],
             'sector_specific': [
-                'healthcare "training mandate" Ontario 2024',
-                '"emergency services" certification training Canada',
-                'education "professional development" requirement 2024'
+                'healthcare "training mandate" Ontario 2025 2026',
+                '"emergency services" certification training Canada 2025',
+                'education "professional development" requirement 2025 2026',
+                '"climate action" training "public sector" 2025'
             ]
         }
         
         # Run searches across all categories
         for category, queries in search_queries.items():
-            print(f"\nSearching for {category.replace('_', ' ').title()}...")
+            print(f"\nSearching for {category.replace('_', ' ').title()} (2025/2026)...")
             
             for query in queries:
                 # Use multiple search engines for comprehensive results
@@ -275,6 +285,7 @@ if __name__ == "__main__":
     
     print("=" * 60)
     print("ADVANCED CANADIAN PUBLIC SECTOR TRAINING LEAD SEARCH")
+    print("FOR 2025/2026 OPPORTUNITIES")
     print("=" * 60)
     print("\nThis example shows how to integrate real web search APIs.")
     print("To use in production:")
@@ -282,5 +293,5 @@ if __name__ == "__main__":
     print("2. Get Bing Search API key from Azure")
     print("3. Consider SerpAPI for easier integration")
     print("4. Set API keys as environment variables")
-    print("\nWith real APIs, you would find hundreds of current opportunities!")
+    print("\nWith real APIs, you would find hundreds of current 2025/2026 opportunities!")
     print("=" * 60)
