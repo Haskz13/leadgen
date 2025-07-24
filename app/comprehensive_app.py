@@ -554,7 +554,7 @@ HTML_TEMPLATE = '''
                         return new Date(a.deadline) - new Date(b.deadline);
                     case 'budget':
                                                  const getBudgetValue = (budget) => {
-                             const match = budget.match(/\\$(\d+)M/);
+                             const match = budget.match(/\\$(\\d+)M/);
                              return match ? parseInt(match[1]) : 0;
                          };
                         return getBudgetValue(b.budget_range) - getBudgetValue(a.budget_range);
