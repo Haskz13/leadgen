@@ -29,6 +29,8 @@ HTML_TEMPLATE = '''
             --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
             --border-color: #2a2a2a;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
         
         body { 
@@ -40,15 +42,16 @@ HTML_TEMPLATE = '''
         
         /* Header */
         .header {
-            background: var(--bg-secondary);
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, rgba(20, 20, 20, 0.8) 100%);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 100;
+            backdrop-filter: blur(10px);
         }
         
         .header-content {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 1.5rem 2rem;
             display: flex;
@@ -63,19 +66,26 @@ HTML_TEMPLATE = '''
         }
         
         .logo h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 700;
             background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+        
+        .logo-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 400;
         }
         
         /* Stats Cards */
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            max-width: 1400px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            max-width: 1600px;
             margin: 2rem auto;
             padding: 0 2rem;
         }
@@ -83,20 +93,52 @@ HTML_TEMPLATE = '''
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 1.75rem;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+        
+        .stat-card:hover::before {
+            transform: translateX(100%);
         }
         
         .stat-card:hover {
             transform: translateY(-2px);
             border-color: var(--accent-primary);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
         }
         
         .stat-value {
             font-size: 2.5rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
         }
         
         .stat-label {
@@ -104,6 +146,7 @@ HTML_TEMPLATE = '''
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            font-weight: 500;
         }
         
         .tier-1 { color: var(--accent-danger); }
@@ -112,7 +155,7 @@ HTML_TEMPLATE = '''
         
         /* Filters */
         .filters-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto 2rem;
             padding: 0 2rem;
         }
@@ -120,8 +163,8 @@ HTML_TEMPLATE = '''
         .filters {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 1.75rem;
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
@@ -143,10 +186,10 @@ HTML_TEMPLATE = '''
         
         .filter-input {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.875rem 1rem;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             color: var(--text-primary);
             font-size: 0.875rem;
             transition: all 0.2s ease;
@@ -159,42 +202,44 @@ HTML_TEMPLATE = '''
         }
         
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1.5rem;
             border: none;
-            border-radius: 8px;
-            font-weight: 500;
+            border-radius: 10px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             font-size: 0.875rem;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            letter-spacing: 0.01em;
         }
         
         .btn-primary {
-            background: var(--accent-primary);
+            background: linear-gradient(135deg, var(--accent-primary), #2563eb);
             color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
         }
         
         .btn-primary:hover {
-            background: #2563eb;
             transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
         }
         
         .btn-secondary {
-            background: transparent;
-            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             border: 1px solid var(--border-color);
         }
         
         .btn-secondary:hover {
             background: var(--bg-hover);
-            color: var(--text-primary);
+            border-color: var(--accent-primary);
         }
         
         /* Main Content */
         .main-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 0 2rem 2rem;
         }
@@ -202,55 +247,92 @@ HTML_TEMPLATE = '''
         /* Lead Cards */
         .leads-grid {
             display: grid;
-            gap: 1rem;
+            gap: 1.25rem;
         }
         
         .lead-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 1.75rem;
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lead-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            transition: background 0.3s ease;
         }
         
         .lead-card:hover {
             background: var(--bg-hover);
             transform: translateX(4px);
+            box-shadow: var(--shadow-lg);
         }
+        
+        .lead-card.tier-1::after { background: var(--accent-danger); }
+        .lead-card.tier-2::after { background: var(--accent-warning); }
+        .lead-card.tier-3::after { background: var(--accent-success); }
         
         .lead-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
+            gap: 1rem;
         }
         
         .lead-org {
-            font-size: 1.125rem;
+            font-size: 1.25rem;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
         }
         
         .lead-title {
             color: var(--accent-primary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
+            font-size: 0.9375rem;
+            margin-bottom: 1.25rem;
             line-height: 1.5;
+            font-weight: 500;
+        }
+        
+        .lead-link {
+            color: var(--accent-primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .lead-link:hover {
+            text-decoration: underline;
+            gap: 0.5rem;
         }
         
         .lead-meta {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
         }
         
         .meta-item {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.375rem;
         }
         
         .meta-label {
@@ -258,124 +340,146 @@ HTML_TEMPLATE = '''
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            font-weight: 600;
         }
         
         .meta-value {
             color: var(--text-secondary);
             font-size: 0.875rem;
+            font-weight: 500;
         }
         
         .tier-badge {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            padding: 0.375rem 0.875rem;
+            border-radius: 24px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            white-space: nowrap;
         }
         
         .tier-badge.urgent {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
         .tier-badge.high {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
             border: 1px solid rgba(245, 158, 11, 0.3);
         }
         
         .tier-badge.standard {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
             border: 1px solid rgba(16, 185, 129, 0.3);
         }
         
         .lead-analysis {
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
         }
         
         .analysis-title {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
+            color: var(--accent-primary);
+            font-size: 0.8125rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .analysis-content {
             color: var(--text-primary);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+        
+        .lead-description {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .description-title {
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .description-content {
+            color: var(--text-primary);
             font-size: 0.875rem;
-            line-height: 1.5;
+            line-height: 1.6;
         }
         
         .lead-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
+            align-items: center;
         }
         
         .lead-status {
             flex: 1;
-            min-width: 120px;
+            min-width: 140px;
         }
         
         .status-select {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.625rem 0.875rem;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px;
             color: var(--text-primary);
             font-size: 0.875rem;
-        }
-        
-        .lead-link {
-            text-decoration: none;
-            color: var(--accent-primary);
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        
-        .lead-link:hover {
-            text-decoration: underline;
+            font-weight: 500;
         }
         
         .notes-input {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.875rem;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 10px;
             color: var(--text-primary);
             font-size: 0.875rem;
             resize: vertical;
-            min-height: 60px;
-            margin-top: 0.5rem;
+            min-height: 80px;
+            margin-top: 0.75rem;
+            font-family: inherit;
+            line-height: 1.5;
         }
         
         /* Loading State */
         .loading {
             text-align: center;
-            padding: 4rem;
+            padding: 6rem 2rem;
             color: var(--text-secondary);
         }
         
         .loading-spinner {
             display: inline-block;
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border: 3px solid var(--border-color);
             border-top-color: var(--accent-primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
         }
         
         @keyframes spin {
@@ -385,14 +489,20 @@ HTML_TEMPLATE = '''
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 4rem;
+            padding: 6rem 2rem;
             color: var(--text-secondary);
         }
         
         .empty-state h3 {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             margin-bottom: 1rem;
             color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .empty-state p {
+            font-size: 1.125rem;
+            line-height: 1.6;
         }
         
         /* Responsive */
@@ -409,6 +519,24 @@ HTML_TEMPLATE = '''
             .filter-group {
                 width: 100%;
             }
+            
+            .lead-header {
+                flex-direction: column;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .lead-card {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 </head>
@@ -416,13 +544,15 @@ HTML_TEMPLATE = '''
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <h1>LeadGen Pro</h1>
-                <span style="color: var(--text-secondary); font-size: 0.875rem;">Canadian Public Sector Training Intelligence</span>
+                <div>
+                    <h1>LeadGen Intelligence</h1>
+                    <div class="logo-subtitle">Canadian Public Sector Training Opportunities</div>
+                </div>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center;">
                 <span style="color: var(--text-dim); font-size: 0.875rem;" id="last-update"></span>
                 <button class="btn btn-primary" onclick="refreshLeads()">
-                    <span>↻</span> Refresh
+                    <span>🔄</span> Refresh Leads
                 </button>
             </div>
         </div>
@@ -430,22 +560,27 @@ HTML_TEMPLATE = '''
     
     <div class="stats-container">
         <div class="stat-card">
+            <div class="stat-icon">📊</div>
             <div class="stat-value" id="total-leads">0</div>
             <div class="stat-label">Total Opportunities</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1);">🔴</div>
             <div class="stat-value tier-1" id="urgent-leads">0</div>
             <div class="stat-label">Urgent (< 30 days)</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">🟡</div>
             <div class="stat-value tier-2" id="high-leads">0</div>
             <div class="stat-label">High Priority</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1);">🟢</div>
             <div class="stat-value tier-3" id="standard-leads">0</div>
             <div class="stat-label">Standard</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">✨</div>
             <div class="stat-value" style="color: var(--accent-primary);" id="new-leads">0</div>
             <div class="stat-label">New Leads</div>
         </div>
@@ -457,12 +592,12 @@ HTML_TEMPLATE = '''
                 <label class="filter-label">Search Type</label>
                 <select class="filter-input" id="type-filter">
                     <option value="">All Types</option>
+                    <option value="Federal Government">Federal Government</option>
+                    <option value="Provincial Government">Provincial Government</option>
+                    <option value="Municipal">Municipal</option>
+                    <option value="Digital Transformation">Digital Transformation</option>
                     <option value="Grant Recipients">Grant Recipients</option>
-                    <option value="Digital Transformations">Digital Transformations</option>
-                    <option value="Compliance & Mandates">Compliance & Mandates</option>
-                    <option value="Municipal Programs">Municipal Programs</option>
-                    <option value="Healthcare & Education">Healthcare & Education</option>
-                    <option value="Indigenous Initiatives">Indigenous Initiatives</option>
+                    <option value="Indigenous">Indigenous Initiatives</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -500,12 +635,14 @@ HTML_TEMPLATE = '''
     <div class="main-container">
         <div id="loading" class="loading">
             <div class="loading-spinner"></div>
-            <p style="margin-top: 1rem;">Searching for training opportunities...</p>
+            <p style="margin-top: 1rem; font-size: 1.125rem;">Searching for training opportunities...</p>
+            <p style="margin-top: 0.5rem; color: var(--text-dim);">This may take a moment as we search across Canadian government sources</p>
         </div>
         
         <div id="empty-state" class="empty-state" style="display: none;">
-            <h3>No leads found</h3>
+            <h3>No training opportunities found</h3>
             <p>Try adjusting your filters or refresh to search again.</p>
+            <p style="margin-top: 1rem; color: var(--text-dim);">The system searches real Canadian government sources only.</p>
         </div>
         
         <div id="leads-container" class="leads-grid" style="display: none;">
@@ -517,47 +654,33 @@ HTML_TEMPLATE = '''
         let leadStatuses = JSON.parse(localStorage.getItem('leadStatuses') || '{}');
         let leadNotes = JSON.parse(localStorage.getItem('leadNotes') || '{}');
         
-        function generateLeadAnalysis(lead) {
-            // Generate intelligent analysis based on lead data
-            let analysis = [];
-            
-            // Analyze organization size/impact
-            if (lead.organization.includes('Canada') || lead.organization.includes('Federal')) {
-                analysis.push("Federal level opportunity - potential for large-scale contract and repeat business across departments.");
-            } else if (lead.organization.includes('Ontario') || lead.organization.includes('Toronto')) {
-                analysis.push("Provincial/municipal opportunity - good for establishing regional presence.");
-            }
-            
-            // Analyze urgency
-            const deadline = new Date(lead.deadline);
-            const daysUntil = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
-            if (daysUntil <= 30) {
-                analysis.push(`URGENT: Only ${daysUntil} days until deadline. Immediate action required.`);
-            }
-            
-            // Analyze opportunity type
-            if (lead.opportunity.toLowerCase().includes('digital transformation')) {
-                analysis.push("Digital transformation project - likely needs change management and technical training.");
-            }
-            if (lead.opportunity.toLowerCase().includes('compliance') || lead.opportunity.toLowerCase().includes('mandatory')) {
-                analysis.push("Compliance/mandatory training - high close probability as training is required by law.");
-            }
-            
-            return analysis.join(" ");
-        }
-        
         function formatLeadCard(lead) {
             const status = leadStatuses[lead.opportunity] || lead.status;
             const notes = leadNotes[lead.opportunity] || '';
             const tierClass = lead.tier.includes('Tier 1') ? 'urgent' : 
                              lead.tier.includes('Tier 2') ? 'high' : 'standard';
+            const cardTierClass = lead.tier.includes('Tier 1') ? 'tier-1' : 
+                                 lead.tier.includes('Tier 2') ? 'tier-2' : 'tier-3';
             
-            const analysis = generateLeadAnalysis(lead);
+            const criticalAnalysis = lead.critical_analysis || 'Standard professional development opportunity';
+            
+            // Format deadline nicely
+            const deadlineDate = new Date(lead.deadline);
+            const formattedDeadline = deadlineDate.toLocaleDateString('en-CA', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            // Calculate days until deadline
+            const today = new Date();
+            const daysUntil = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+            const daysText = daysUntil > 0 ? `${daysUntil} days` : 'Overdue';
             
             return `
-                <div class="lead-card">
+                <div class="lead-card ${cardTierClass}">
                     <div class="lead-header">
-                        <div>
+                        <div style="flex: 1;">
                             <div class="lead-org">${lead.organization}</div>
                             <div class="lead-title">${lead.opportunity}</div>
                         </div>
@@ -567,30 +690,35 @@ HTML_TEMPLATE = '''
                     <div class="lead-meta">
                         <div class="meta-item">
                             <span class="meta-label">Deadline</span>
-                            <span class="meta-value">${new Date(lead.deadline).toLocaleDateString('en-CA', { 
-                                year: 'numeric', 
-                                month: 'short', 
-                                day: 'numeric' 
-                            })}</span>
+                            <span class="meta-value">${formattedDeadline} (${daysText})</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">Type</span>
+                            <span class="meta-value">${lead.opportunity_type || 'General'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Category</span>
                             <span class="meta-value">${lead.search_type || 'General'}</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">Contact</span>
                             <span class="meta-value">${lead.contact}</span>
                         </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Found</span>
-                            <span class="meta-value">${lead.date_found}</span>
-                        </div>
                     </div>
                     
-                    ${analysis ? `
+                    ${criticalAnalysis !== 'Standard professional development opportunity' ? `
                     <div class="lead-analysis">
-                        <div class="analysis-title">Sales Intelligence</div>
-                        <div class="analysis-content">${analysis}</div>
+                        <div class="analysis-title">
+                            <span>🎯</span> Critical Sales Analysis
+                        </div>
+                        <div class="analysis-content">${criticalAnalysis}</div>
+                    </div>
+                    ` : ''}
+                    
+                    ${lead.notes ? `
+                    <div class="lead-description">
+                        <div class="description-title">Description</div>
+                        <div class="description-content">${lead.notes}</div>
                     </div>
                     ` : ''}
                     
@@ -612,7 +740,7 @@ HTML_TEMPLATE = '''
                     </div>
                     
                     <textarea class="notes-input" 
-                              placeholder="Add notes, next steps, contact details..." 
+                              placeholder="Add notes, next steps, key contacts, proposal ideas..." 
                               onblur="updateNotes('${lead.opportunity}', this.value)">${notes}</textarea>
                 </div>
             `;
@@ -641,7 +769,8 @@ HTML_TEMPLATE = '''
             } catch (error) {
                 console.error('Error loading leads:', error);
                 document.getElementById('loading').innerHTML = 
-                    '<p style="color: var(--accent-danger);">Error loading leads. Please check if the backend is running.</p>';
+                    '<p style="color: var(--accent-danger); font-size: 1.125rem;">⚠️ Error loading leads</p>' +
+                    '<p style="margin-top: 0.5rem;">Please check if the backend is running on port 5000</p>';
             }
         }
         
@@ -704,6 +833,8 @@ HTML_TEMPLATE = '''
                 await loadLeads();
             } catch (error) {
                 console.error('Error refreshing leads:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<p style="color: var(--accent-danger);">⚠️ Error refreshing leads</p>';
             }
         }
         
@@ -715,19 +846,26 @@ HTML_TEMPLATE = '''
             }));
             
             const csv = [
-                ['Organization', 'Opportunity', 'Type', 'Deadline', 'Tier', 'Contact', 'Source', 'Status', 'Notes', 'Analysis'],
-                ...filteredLeads.map(lead => [
-                    lead.organization,
-                    lead.opportunity,
-                    lead.search_type || 'General',
-                    lead.deadline,
-                    lead.tier,
-                    lead.contact,
-                    lead.source,
-                    lead.status,
-                    lead.notes,
-                    generateLeadAnalysis(lead)
-                ])
+                ['Organization', 'Opportunity', 'Type', 'Category', 'Deadline', 'Days Until', 'Tier', 'Contact', 'Source', 'Status', 'Critical Analysis', 'Notes'],
+                ...filteredLeads.map(lead => {
+                    const deadlineDate = new Date(lead.deadline);
+                    const daysUntil = Math.ceil((deadlineDate - new Date()) / (1000 * 60 * 60 * 24));
+                    
+                    return [
+                        lead.organization,
+                        lead.opportunity,
+                        lead.opportunity_type || 'General',
+                        lead.search_type || 'General',
+                        lead.deadline,
+                        daysUntil,
+                        lead.tier,
+                        lead.contact,
+                        lead.source,
+                        lead.status,
+                        lead.critical_analysis || 'Standard professional development opportunity',
+                        lead.notes
+                    ];
+                })
             ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\\n');
             
             const blob = new Blob([csv], { type: 'text/csv' });

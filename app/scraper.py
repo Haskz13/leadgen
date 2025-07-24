@@ -11,7 +11,13 @@ import random
 class CanadianPublicSectorScraper:
     def __init__(self):
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-CA,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
         }
         self.session = requests.Session()
         self.session.headers.update(self.headers)
@@ -22,7 +28,8 @@ class CanadianPublicSectorScraper:
             'workshop', 'certification', 'program', 'upskilling', 'reskilling',
             'capacity building', 'competency', 'education', 'course',
             'digital transformation', 'change management', 'implementation',
-            'compliance', 'mandatory', 'requirement', 'deadline'
+            'compliance', 'mandatory', 'requirement', 'deadline',
+            'skills development', 'workforce development', 'talent development'
         ]
         
         # Canadian public sector indicators
@@ -30,179 +37,76 @@ class CanadianPublicSectorScraper:
             'government', 'canada', 'ontario', 'quebec', 'british columbia',
             'alberta', 'manitoba', 'saskatchewan', 'nova scotia', 'newfoundland',
             'ministry', 'department', 'agency', 'crown corporation', 'municipal',
-            'city of', 'region of', 'indigenous', 'first nations', 'metis', 'inuit'
+            'city of', 'region of', 'indigenous', 'first nations', 'metis', 'inuit',
+            'federal', 'provincial', 'public sector', 'civil service', 'public service'
         ]
         
-    def search_google_custom(self, query):
+    def search_web_real(self, query):
         """
-        Use Google's Programmable Search Engine (free tier: 100 queries/day)
-        You need to set up a custom search engine at https://programmablesearchengine.google.com
-        """
-        # For demo purposes, we'll use web scraping instead
-        return self.search_web_scrape(query)
-    
-    def search_web_scrape(self, query):
-        """
-        Use direct news site searches for Canadian government training opportunities
+        Perform real web searches using multiple search engines
         """
         results = []
         
-        # Search specific Canadian government news sites directly
-        news_sites = [
+        # Try multiple search approaches
+        search_engines = [
             {
-                'name': 'Canada.ca News',
-                'url': 'https://www.canada.ca/en/news.html',
-                'search_url': f'https://www.canada.ca/en/sr/srb/sra.html?cdn=canada&st=s&num=10&st1rt=0&langs=en&q={quote(query + " training 2025 2026")}'
+                'name': 'DuckDuckGo HTML',
+                'url': f'https://html.duckduckgo.com/html/?q={quote(query + " site:.ca")}',
+                'parser': self._parse_duckduckgo_html
             },
             {
-                'name': 'Ontario Newsroom',
-                'url': 'https://news.ontario.ca/',
-                'search_url': f'https://news.ontario.ca/en/search?q={quote(query + " training 2025")}'
+                'name': 'Searx',
+                'url': f'https://searx.be/search?q={quote(query + " canada government training 2025 2026")}&categories=general&language=en',
+                'parser': self._parse_searx_results
             }
         ]
         
-        for site in news_sites:
+        for engine in search_engines:
             try:
-                print(f"    🔍 Searching {site['name']}...")
-                response = self.session.get(site['search_url'], timeout=10)
+                print(f"    🔍 Searching {engine['name']}...")
+                response = self.session.get(engine['url'], timeout=15)
                 
                 if response.status_code == 200:
-                    soup = BeautifulSoup(response.text, 'html.parser')
+                    engine_results = engine['parser'](response.text)
+                    results.extend(engine_results)
+                    print(f"       ✓ Found {len(engine_results)} results from {engine['name']}")
                     
-                    # Parse Canada.ca results
-                    if 'canada.ca' in site['url']:
-                        items = soup.find_all(['article', 'div'], class_=['result', 'mrgn-bttm-md'])
-                        for item in items[:5]:
-                            try:
-                                link_elem = item.find('a', href=True)
-                                if link_elem:
-                                    title = link_elem.text.strip()
-                                    link = 'https://www.canada.ca' + link_elem['href'] if link_elem['href'].startswith('/') else link_elem['href']
-                                    
-                                    # Get snippet
-                                    snippet_elem = item.find('p')
-                                    snippet = snippet_elem.text.strip() if snippet_elem else ''
-                                    
-                                    results.append({
-                                        'title': title,
-                                        'link': link,
-                                        'snippet': snippet
-                                    })
-                            except:
-                                continue
-                    
-                    # Parse Ontario news results
-                    elif 'ontario.ca' in site['url']:
-                        items = soup.find_all(['div', 'article'], class_=['news-item', 'search-result'])
-                        for item in items[:5]:
-                            try:
-                                link_elem = item.find('a', href=True)
-                                if link_elem:
-                                    title = link_elem.text.strip()
-                                    link = 'https://news.ontario.ca' + link_elem['href'] if link_elem['href'].startswith('/') else link_elem['href']
-                                    
-                                    snippet_elem = item.find(['p', 'div'], class_=['description', 'summary'])
-                                    snippet = snippet_elem.text.strip() if snippet_elem else ''
-                                    
-                                    results.append({
-                                        'title': title,
-                                        'link': link,
-                                        'snippet': snippet
-                                    })
-                            except:
-                                continue
-                    
-                    print(f"       ✓ Found {len(results)} results from {site['name']}")
-                    
-                time.sleep(1)  # Respectful delay
+                time.sleep(random.uniform(1, 2))  # Respectful delay
                 
             except Exception as e:
-                print(f"       ⚠️ Error with {site['name']}: {str(e)[:50]}")
+                print(f"       ⚠️ Error with {engine['name']}: {str(e)[:50]}")
         
-        # If no results, create some realistic examples to show the system works
-        if not results:
-            print("       ℹ️ Using example data to demonstrate functionality")
-            results = self._get_example_results()
-                
+        # Also search specific Canadian government sites
+        gov_results = self._search_canadian_gov_sites_directly(query)
+        results.extend(gov_results)
+        
         return results
     
-    def _parse_bing_results(self, html):
-        """Parse Bing search results"""
+    def _parse_duckduckgo_html(self, html):
+        """Parse DuckDuckGo HTML results"""
         soup = BeautifulSoup(html, 'html.parser')
         results = []
         
-        # Debug: Check if we're getting the right HTML
-        if 'b_algo' not in html:
-            print("       ⚠️ Warning: Bing HTML structure may have changed")
-            # Try alternative parsing
-            for item in soup.find_all(['div', 'li'], class_=['b_algo', 'b_results']):
-                try:
-                    link_elem = item.find('a')
-                    if link_elem and link_elem.text:
-                        snippet = item.text.strip()[:200]
-                        results.append({
-                            'title': link_elem.text.strip(),
-                            'link': link_elem.get('href', ''),
-                            'snippet': snippet
-                        })
-                except:
-                    continue
-        else:
-            for item in soup.find_all('li', class_='b_algo'):
-                try:
-                    link_elem = item.find('h2').find('a')
-                    snippet_elem = item.find('div', class_='b_caption')
-                    
-                    if link_elem and snippet_elem:
-                        results.append({
-                            'title': link_elem.text.strip(),
-                            'link': link_elem.get('href', ''),
-                            'snippet': snippet_elem.text.strip()
-                        })
-                except:
-                    continue
-                
-        return results[:5]  # Limit results
-    
-    def _parse_searx_results(self, html):
-        """Parse Searx search results"""
-        soup = BeautifulSoup(html, 'html.parser')
-        results = []
-        
-        for item in soup.find_all('div', class_='result'):
+        # DuckDuckGo HTML version has different structure
+        for item in soup.find_all(['div', 'td'], class_=['result__body', 'result']):
             try:
-                title_elem = item.find('h4', class_='result_header')
-                link_elem = title_elem.find('a') if title_elem else None
-                snippet_elem = item.find('p', class_='result-content')
-                
-                if link_elem and snippet_elem:
-                    results.append({
-                        'title': title_elem.text.strip(),
-                        'link': link_elem.get('href', ''),
-                        'snippet': snippet_elem.text.strip()
-                    })
-            except:
-                continue
-                
-        return results[:5]
-    
-    def _parse_duckduckgo_results(self, html):
-        """Parse DuckDuckGo search results"""
-        soup = BeautifulSoup(html, 'html.parser')
-        results = []
-        
-        # DuckDuckGo uses different structure
-        for item in soup.find_all(['div', 'article'], class_=['result', 'result__body']):
-            try:
-                link_elem = item.find('a', class_=['result__a', 'result__url'])
-                snippet_elem = item.find(['a', 'span'], class_=['result__snippet'])
+                # Find the link
+                link_elem = item.find('a', class_='result__a')
+                if not link_elem:
+                    link_elem = item.find('a', href=True)
                 
                 if link_elem:
-                    title = link_elem.text.strip() if link_elem.text else ''
+                    title = link_elem.text.strip()
                     link = link_elem.get('href', '')
-                    snippet = snippet_elem.text.strip() if snippet_elem else item.text.strip()[:200]
                     
-                    if title and link:
+                    # Get snippet
+                    snippet_elem = item.find(['span', 'div'], class_=['result__snippet'])
+                    if not snippet_elem:
+                        snippet_elem = item.find_next_sibling('td') if item.name == 'td' else None
+                    
+                    snippet = snippet_elem.text.strip() if snippet_elem else ''
+                    
+                    if title and link and '.ca' in link:  # Prioritize Canadian sites
                         results.append({
                             'title': title,
                             'link': link,
@@ -211,61 +115,131 @@ class CanadianPublicSectorScraper:
             except:
                 continue
                 
-        return results[:5]
+        return results[:10]  # Limit results
     
-    def _get_example_results(self):
-        """Get realistic example results to demonstrate functionality"""
-        examples = [
+    def _parse_searx_results(self, html):
+        """Parse Searx search results"""
+        soup = BeautifulSoup(html, 'html.parser')
+        results = []
+        
+        for item in soup.find_all('article', class_='result'):
+            try:
+                title_elem = item.find('h3')
+                link_elem = item.find('a', href=True)
+                snippet_elem = item.find('p', class_='content')
+                
+                if title_elem and link_elem:
+                    results.append({
+                        'title': title_elem.text.strip(),
+                        'link': link_elem.get('href', ''),
+                        'snippet': snippet_elem.text.strip() if snippet_elem else ''
+                    })
+            except:
+                continue
+                
+        return results[:10]
+    
+    def _search_canadian_gov_sites_directly(self, query):
+        """Search specific Canadian government news and announcement sites"""
+        results = []
+        
+        # List of Canadian government sites to search
+        gov_sites = [
             {
-                'title': 'Government of Canada announces $50M digital skills training initiative for 2025-2026',
-                'link': 'https://www.canada.ca/en/employment-social-development/news/2025/01/digital-skills-training.html',
-                'snippet': 'The Government of Canada is investing $50 million in a new digital skills training program for federal employees starting April 2025. The initiative aims to train 10,000 employees in AI, cybersecurity, and cloud technologies by March 2026.'
+                'name': 'Canada.ca News',
+                'search_url': f'https://www.canada.ca/en/sr/srb.html?cdn=canada&st=s&num=10&st1rt=0&langs=en&q={quote(query)}',
+                'base_url': 'https://www.canada.ca'
             },
             {
-                'title': 'CRA launches mandatory privacy training for all staff - deadline July 2025',
-                'link': 'https://www.canada.ca/en/revenue-agency/news/2025/01/privacy-training-initiative.html',
-                'snippet': 'Canada Revenue Agency announces mandatory privacy and data protection training for all 45,000 employees. Training must be completed by July 31, 2025, to comply with new federal privacy regulations.'
+                'name': 'Ontario Newsroom',
+                'search_url': f'https://news.ontario.ca/en/search?q={quote(query)}',
+                'base_url': 'https://news.ontario.ca'
             },
             {
-                'title': 'Ontario government requires AODA training for 100,000 public sector workers by June 2025',
-                'link': 'https://news.ontario.ca/en/release/2025/01/aoda-compliance-training.html',
-                'snippet': 'The Province of Ontario mandates Accessibility for Ontarians with Disabilities Act (AODA) training for all public sector employees. Organizations must ensure compliance by June 30, 2025.'
+                'name': 'BC Gov News',
+                'search_url': f'https://news.gov.bc.ca/search?q={quote(query)}',
+                'base_url': 'https://news.gov.bc.ca'
             },
             {
-                'title': 'City of Toronto digital transformation requires training for 35,000 employees',
-                'link': 'https://www.toronto.ca/news/digital-transformation-2025/',
-                'snippet': 'Toronto launches comprehensive digital transformation initiative requiring extensive training for city staff on new systems and processes throughout 2025-2026.'
-            },
-            {
-                'title': 'Indigenous Services Canada announces $25M for capacity building training programs',
-                'link': 'https://www.canada.ca/en/indigenous-services-canada/news/2025/01/capacity-building.html',
-                'snippet': 'ISC allocates $25 million for Indigenous-led training and capacity building programs across Canada for fiscal year 2025-2026, focusing on governance and financial management skills.'
+                'name': 'Alberta Government',
+                'search_url': f'https://www.alberta.ca/search?q={quote(query)}',
+                'base_url': 'https://www.alberta.ca'
             }
         ]
         
-        return examples[:3]  # Return a few examples
-    
-    def search_canadian_gov_sites(self, query):
-        """
-        Search specifically on Canadian government websites
-        """
-        gov_sites = [
-            'site:canada.ca',
-            'site:ontario.ca', 
-            'site:gov.bc.ca',
-            'site:alberta.ca',
-            'site:gov.mb.ca',
-            'site:toronto.ca',
-            'site:vancouver.ca'
-        ]
+        for site in gov_sites:
+            try:
+                print(f"       🔍 Searching {site['name']} directly...")
+                response = self.session.get(site['search_url'], timeout=10)
+                
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    
+                    # Generic search result parsing
+                    items = soup.find_all(['article', 'div', 'li'], 
+                                        class_=re.compile('result|search-result|news-item|listing-item', re.I))
+                    
+                    for item in items[:5]:  # Limit to 5 per site
+                        try:
+                            # Find link and title
+                            link_elem = item.find('a', href=True)
+                            if link_elem:
+                                title = link_elem.text.strip() or item.find(['h2', 'h3', 'h4']).text.strip()
+                                link = link_elem['href']
+                                
+                                # Make link absolute
+                                if link.startswith('/'):
+                                    link = site['base_url'] + link
+                                
+                                # Get snippet
+                                snippet = ''
+                                for elem in item.find_all(['p', 'div', 'span']):
+                                    text = elem.text.strip()
+                                    if len(text) > 50 and 'result' not in elem.get('class', []):
+                                        snippet = text[:300]
+                                        break
+                                
+                                if title:
+                                    results.append({
+                                        'title': title,
+                                        'link': link,
+                                        'snippet': snippet
+                                    })
+                        except:
+                            continue
+                    
+                    print(f"          ✓ Found {len([r for r in results if site['base_url'] in r['link']])} results")
+                    
+                time.sleep(1)  # Respectful delay
+                
+            except Exception as e:
+                print(f"          ⚠️ Error with {site['name']}: {str(e)[:50]}")
         
-        all_results = []
-        for site in gov_sites[:3]:  # Limit to avoid rate limiting
-            site_query = f'{site} {query}'
-            results = self.search_web_scrape(site_query)
-            all_results.extend(results)
-            
-        return all_results
+        return results
+    
+    def search_web_scrape(self, query):
+        """Main search method that uses real web searching"""
+        # First try real web search
+        results = self.search_web_real(query)
+        
+        # If we got results, return them
+        if results:
+            print(f"       ✅ Found {len(results)} real results")
+            return results
+        
+        # If no results, try a broader search
+        print("       ℹ️ No results found, trying broader search...")
+        broader_query = query.replace('"', '').split()[0:3]  # Take first 3 words
+        broader_query = ' '.join(broader_query) + ' canada government'
+        results = self.search_web_real(broader_query)
+        
+        if results:
+            print(f"       ✅ Found {len(results)} results with broader search")
+            return results
+        
+        # Absolutely no example data - return empty if no real results
+        print("       ⚠️ No real results found")
+        return []
     
     def extract_lead_from_result(self, result, search_category):
         """
@@ -298,6 +272,7 @@ class CanadianPublicSectorScraper:
         
         # Generate AI-like analysis
         opportunity_type = self._analyze_opportunity_type(full_text)
+        critical_analysis = self._generate_critical_analysis(full_text, organization, deadline)
         
         return {
             'organization': organization,
@@ -310,7 +285,8 @@ class CanadianPublicSectorScraper:
             'notes': snippet[:250] + '...' if len(snippet) > 250 else snippet,
             'date_found': datetime.now().strftime('%Y-%m-%d'),
             'search_type': search_category,
-            'opportunity_type': opportunity_type
+            'opportunity_type': opportunity_type,
+            'critical_analysis': critical_analysis
         }
     
     def _is_training_opportunity(self, text):
@@ -320,14 +296,12 @@ class CanadianPublicSectorScraper:
         
         # Also check for government transformation indicators
         transformation_keywords = ['modernization', 'transformation', 'implementation', 
-                                 'new system', 'upgrade', 'rollout', 'initiative']
+                                 'new system', 'upgrade', 'rollout', 'initiative',
+                                 'digital adoption', 'change', 'reform']
         transform_count = sum(1 for keyword in transformation_keywords if keyword in text)
         
         total_relevance = keyword_count + transform_count
         
-        if total_relevance < 1:
-            print(f"         ❌ Not relevant (training: {keyword_count}, transform: {transform_count})")
-            
         return total_relevance >= 1
     
     def _is_canadian_public_sector(self, text, link):
@@ -335,10 +309,17 @@ class CanadianPublicSectorScraper:
         # Check URL
         canadian_domains = ['.gc.ca', '.gov.on.ca', '.gov.bc.ca', '.gov.ab.ca', 
                            '.gov.mb.ca', '.gov.sk.ca', '.gov.ns.ca', '.gov.nl.ca',
-                           'canada.ca', 'ontario.ca', 'alberta.ca', 'toronto.ca']
+                           'canada.ca', 'ontario.ca', 'alberta.ca', 'toronto.ca',
+                           '.ca/']
         
         domain = urlparse(link).netloc.lower()
-        if any(cdn_domain in domain for cdn_domain in canadian_domains):
+        url_path = urlparse(link).path.lower()
+        
+        # Check if it's a Canadian domain
+        is_canadian_domain = any(cdn_domain in domain for cdn_domain in canadian_domains)
+        is_canadian_path = any(cdn_domain in url_path for cdn_domain in canadian_domains)
+        
+        if is_canadian_domain or is_canadian_path:
             return True
             
         # Check text content
@@ -347,19 +328,16 @@ class CanadianPublicSectorScraper:
     
     def _is_current_opportunity(self, text):
         """Check if opportunity is for 2025/2026"""
-        year_patterns = ['2025', '2026', '2024-25', '2025-26', '2025-2026', '2025/26']
+        year_patterns = ['2025', '2026', '2024-25', '2025-26', '2025-2026', '2025/26', '2025/2026']
         has_year = any(year in text for year in year_patterns)
         
         # If no year mentioned, check for current/upcoming indicators
         if not has_year:
             current_indicators = ['upcoming', 'new', 'launching', 'starting', 'beginning',
-                                'announced', 'recent', 'latest', 'current', 'now']
+                                'announced', 'recent', 'latest', 'current', 'now',
+                                'this year', 'next year', 'coming', 'future']
             has_current = any(indicator in text for indicator in current_indicators)
-            if has_current:
-                print(f"         ℹ️ No year found but has current indicators")
-                return True
-            else:
-                print(f"         ❌ No 2025/2026 year found")
+            return has_current
         
         return has_year
     
@@ -374,18 +352,35 @@ class CanadianPublicSectorScraper:
             'toronto.ca': 'City of Toronto',
             'vancouver.ca': 'City of Vancouver',
             'alberta.ca': 'Government of Alberta',
-            'gov.bc.ca': 'Government of British Columbia'
+            'gov.bc.ca': 'Government of British Columbia',
+            'gov.mb.ca': 'Government of Manitoba',
+            'gov.sk.ca': 'Government of Saskatchewan',
+            'quebec.ca': 'Government of Quebec'
         }
         
         for domain_key, org_name in org_mapping.items():
             if domain_key in domain:
                 # Try to get more specific department/ministry
-                dept_match = re.search(r'(Ministry|Department|Agency|Corporation) of [\w\s]+', title + ' ' + snippet)
-                if dept_match:
-                    return dept_match.group(0)
+                dept_patterns = [
+                    r'(Ministry of [\w\s]+)',
+                    r'(Department of [\w\s]+)',
+                    r'([\w\s]+ Agency)',
+                    r'([\w\s]+ Corporation)',
+                    r'([\w\s]+ Canada)',
+                    r'(Service Canada)',
+                    r'(Health Canada)',
+                    r'(Transport Canada)'
+                ]
+                
+                combined_text = title + ' ' + snippet
+                for pattern in dept_patterns:
+                    match = re.search(pattern, combined_text, re.I)
+                    if match:
+                        return match.group(1).strip()
+                
                 return org_name
                 
-        # Try pattern matching
+        # Try pattern matching in title
         patterns = [
             r'^([^-–—:]+?)(?:\s*[-–—:])',  # Text before dash/colon
             r'((?:City|Region|Municipality) of [\w\s]+)',
@@ -404,37 +399,53 @@ class CanadianPublicSectorScraper:
     def _extract_deadline(self, text):
         """Extract or intelligently estimate deadline"""
         # Look for specific dates
-        months = ['january', 'february', 'march', 'april', 'may', 'june', 
-                  'july', 'august', 'september', 'october', 'november', 'december']
+        date_patterns = [
+            r'(\d{1,2}[-/]\d{1,2}[-/]\d{4})',  # MM-DD-YYYY or MM/DD/YYYY
+            r'(\d{4}[-/]\d{1,2}[-/]\d{1,2})',  # YYYY-MM-DD
+            r'((?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s*202[56])',
+            r'((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2},?\s*202[56])',
+            r'by\s+((?:january|february|march|april|may|june|july|august|september|october|november|december)\s+202[56])',
+            r'before\s+((?:january|february|march|april|may|june|july|august|september|october|november|december)\s+202[56])'
+        ]
         
-        for month in months:
-            pattern = rf'{month}\s+\d{{1,2}},?\s*202[56]'
+        for pattern in date_patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                # Parse and return the date
                 try:
-                    date_str = match.group(0)
-                    # Simple date parsing - in production use dateutil
-                    if 'july' in date_str.lower():
-                        return '2025-07-31'
-                    elif 'august' in date_str.lower():
-                        return '2025-08-31'
+                    date_str = match.group(1)
+                    # Parse the date (simplified - in production use dateutil)
+                    if '2025' in date_str:
+                        if any(month in date_str.lower() for month in ['jul', 'july']):
+                            return '2025-07-31'
+                        elif any(month in date_str.lower() for month in ['aug', 'august']):
+                            return '2025-08-31'
+                        elif any(month in date_str.lower() for month in ['sep', 'september']):
+                            return '2025-09-30'
+                        elif any(month in date_str.lower() for month in ['dec', 'december']):
+                            return '2025-12-31'
+                        else:
+                            return '2025-06-30'  # Default mid-year
+                    elif '2026' in date_str:
+                        return '2026-03-31'  # Default fiscal year end
                 except:
                     pass
         
         # Look for urgency indicators
-        if any(word in text for word in ['urgent', 'immediate', 'asap', 'quickly']):
-            return (datetime.now() + timedelta(days=21)).strftime('%Y-%m-%d')
+        if any(word in text for word in ['urgent', 'immediate', 'asap', 'quickly', 'soon']):
+            return (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
         elif any(word in text for word in ['summer', 'q2', 'second quarter']):
             return '2025-07-31'
-        elif any(word in text for word in ['fall', 'q3', 'third quarter']):
+        elif any(word in text for word in ['fall', 'autumn', 'q3', 'third quarter']):
             return '2025-09-30'
         elif any(word in text for word in ['winter', 'q4', 'fourth quarter']):
             return '2025-12-31'
+        elif any(word in text for word in ['spring', 'q1', 'first quarter']):
+            return '2025-03-31'
         elif '2026' in text:
             return '2026-03-31'
         else:
-            return (datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d')
+            # Default to 90 days from now
+            return (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
     
     def _calculate_tier(self, text, deadline):
         """Calculate urgency tier using AI-like logic"""
@@ -443,10 +454,10 @@ class CanadianPublicSectorScraper:
             days_until = (deadline_date - datetime.now()).days
             
             # Tier 1: Urgent (< 30 days or has urgency keywords)
-            if days_until <= 30 or any(word in text for word in ['urgent', 'immediate', 'critical', 'mandatory']):
+            if days_until <= 30 or any(word in text for word in ['urgent', 'immediate', 'critical', 'mandatory', 'asap']):
                 return 'Tier 1 - Urgent'
             # Tier 2: High Priority (< 60 days or important keywords)
-            elif days_until <= 60 or any(word in text for word in ['priority', 'important', 'compliance', 'requirement']):
+            elif days_until <= 60 or any(word in text for word in ['priority', 'important', 'compliance', 'requirement', 'deadline']):
                 return 'Tier 2 - High Priority'
             # Tier 3: Standard
             else:
@@ -463,36 +474,95 @@ class CanadianPublicSectorScraper:
             return email_match.group(0)
             
         # Look for phone
-        phone_pattern = r'(?:\d{3}[-.]?\d{3}[-.]?\d{4}|\(\d{3}\)\s*\d{3}[-.]?\d{4})'
-        phone_match = re.search(phone_pattern, snippet)
-        if phone_match:
-            return phone_match.group(0)
+        phone_patterns = [
+            r'(?:\d{3}[-.]?\d{3}[-.]?\d{4})',
+            r'(?:\(\d{3}\)\s*\d{3}[-.]?\d{4})',
+            r'(?:1[-.]?\d{3}[-.]?\d{3}[-.]?\d{4})'
+        ]
+        
+        for pattern in phone_patterns:
+            phone_match = re.search(pattern, snippet)
+            if phone_match:
+                return phone_match.group(0)
             
         # Default based on domain
         domain = urlparse(link).netloc.lower()
-        if 'toronto.ca' in domain:
-            return 'procurement@toronto.ca'
-        elif 'ontario.ca' in domain:
-            return 'info@ontario.ca'
-        elif 'canada.ca' in domain:
-            return 'info@canada.ca'
+        contact_mapping = {
+            'toronto.ca': 'procurement@toronto.ca',
+            'ontario.ca': 'info@ontario.ca',
+            'canada.ca': 'info@canada.ca',
+            'alberta.ca': 'info@alberta.ca',
+            'gov.bc.ca': 'info@gov.bc.ca',
+            'vancouver.ca': 'info@vancouver.ca'
+        }
+        
+        for domain_key, contact in contact_mapping.items():
+            if domain_key in domain:
+                return contact
             
         return 'See source for contact details'
     
     def _analyze_opportunity_type(self, text):
         """Analyze what type of training opportunity this is"""
-        if 'digital transformation' in text:
+        if 'digital transformation' in text or 'digital adoption' in text:
             return 'Digital Transformation'
         elif 'compliance' in text or 'mandatory' in text:
             return 'Compliance Training'
         elif 'grant' in text or 'funding' in text:
-            return 'Grant Recipient'
+            return 'Grant/Funding Opportunity'
         elif 'indigenous' in text or 'first nations' in text:
             return 'Indigenous Initiative'
         elif 'health' in text or 'medical' in text:
             return 'Healthcare Training'
+        elif 'leadership' in text or 'management' in text:
+            return 'Leadership Development'
+        elif 'cyber' in text or 'security' in text:
+            return 'Cybersecurity Training'
+        elif 'data' in text or 'analytics' in text:
+            return 'Data/Analytics Training'
         else:
-            return 'General Training'
+            return 'Professional Development'
+    
+    def _generate_critical_analysis(self, text, organization, deadline):
+        """Generate critical analysis for sales intelligence"""
+        analysis_points = []
+        
+        # Analyze organization scale
+        if 'canada' in organization.lower() and ('government of canada' in organization.lower() or 'federal' in text):
+            analysis_points.append("Federal opportunity - high value potential with possibility of national rollout")
+        elif any(prov in organization.lower() for prov in ['ontario', 'british columbia', 'alberta', 'quebec']):
+            analysis_points.append("Provincial opportunity - significant scale with regional impact")
+        elif 'city of' in organization.lower() or 'municipal' in text:
+            analysis_points.append("Municipal opportunity - focused scope with potential for replication in other cities")
+        
+        # Analyze urgency
+        try:
+            deadline_date = datetime.strptime(deadline, '%Y-%m-%d')
+            days_until = (deadline_date - datetime.now()).days
+            if days_until <= 30:
+                analysis_points.append(f"URGENT: Only {days_until} days to deadline - immediate action required")
+            elif days_until <= 60:
+                analysis_points.append(f"Time-sensitive: {days_until} days to deadline - prioritize engagement")
+        except:
+            pass
+        
+        # Analyze opportunity characteristics
+        if 'mandatory' in text or 'compliance' in text or 'required' in text:
+            analysis_points.append("Mandatory training - high close probability due to regulatory requirement")
+        
+        if 'digital' in text and ('transformation' in text or 'modernization' in text):
+            analysis_points.append("Digital transformation initiative - likely needs comprehensive change management")
+        
+        if 'grant' in text or 'funding' in text:
+            analysis_points.append("Funded opportunity - budget already allocated")
+        
+        if any(keyword in text for keyword in ['pilot', 'trial', 'proof of concept']):
+            analysis_points.append("Pilot opportunity - potential for expansion if successful")
+        
+        if any(size in text for size in ['10,000', '20,000', '50,000', '100,000', 'thousand', 'million']):
+            analysis_points.append("Large-scale deployment indicated - significant revenue potential")
+        
+        return ' | '.join(analysis_points) if analysis_points else 'Standard professional development opportunity'
     
     def get_all_leads(self):
         """
@@ -503,47 +573,47 @@ class CanadianPublicSectorScraper:
         # Define search queries for 2025/2026
         search_queries = {
             'Federal Government': [
-                '"Government of Canada" training program 2025',
-                'federal employee "professional development" 2025 2026',
-                'canada.ca "skills training" initiative 2025',
-                '"digital transformation" training canada government 2025'
+                'Government of Canada training program 2025 2026',
+                'federal employee professional development 2025',
+                'canada digital transformation training 2025',
+                'public service training initiative 2025'
             ],
             'Provincial Government': [
-                'Ontario government "mandatory training" 2025',
-                '"Government of Ontario" employee training 2025',
-                'British Columbia "skills development" government 2025',
-                'Alberta government "professional development" 2025'
+                'Ontario government training 2025 mandatory',
+                'British Columbia skills development 2025',
+                'Alberta government professional development 2025',
+                'Quebec government formation 2025'
             ],
             'Municipal': [
-                '"City of Toronto" training program 2025',
-                'Toronto "employee development" 2025 deadline',
-                'Vancouver municipal "skills training" 2025',
-                'Calgary city "professional development" 2025'
-            ],
-            'Compliance & Mandates': [
-                'AODA training deadline 2025 Ontario government',
-                '"accessibility training" mandatory Canada 2025',
-                'cybersecurity training requirement "public sector" 2025',
-                '"privacy training" government Canada deadline 2025'
+                'City of Toronto training program 2025',
+                'Vancouver municipal training 2025',
+                'Calgary professional development 2025',
+                'Montreal formation municipale 2025'
             ],
             'Digital Transformation': [
-                'CRA "digital transformation" training 2025',
-                '"Service Canada" modernization training 2025',
-                'government "system implementation" training 2025',
-                '"Phoenix replacement" training canada 2025'
+                'canada digital adoption program training',
+                'government digital transformation 2025',
+                'public sector modernization training',
+                'digital government initiative 2025'
+            ],
+            'Grant Recipients': [
+                'canada training grant recipients 2025',
+                'professional development funding canada',
+                'workforce development grants 2025',
+                'skills training funding opportunities'
             ],
             'Indigenous': [
-                '"Indigenous Services Canada" training 2025',
-                'First Nations "capacity building" 2025',
-                'indigenous "skills development" government 2025',
-                'AFN "professional development" 2025'
+                'Indigenous Services Canada training 2025',
+                'First Nations capacity building 2025',
+                'indigenous skills development 2025',
+                'aboriginal professional development funding'
             ]
         }
         
         print("\n" + "="*70)
         print("🚀 STARTING REAL-TIME WEB SEARCH FOR CANADIAN PUBLIC SECTOR TRAINING")
         print("="*70)
-        print("⚡ Using AI-powered search to find actual 2025/2026 opportunities...")
+        print("⚡ Searching for actual 2025/2026 opportunities...")
         print("="*70 + "\n")
         
         total_searches = sum(len(queries) for queries in search_queries.values())
@@ -557,16 +627,11 @@ class CanadianPublicSectorScraper:
                 current_search += 1
                 print(f"\n  [{current_search}/{total_searches}] Query: {query}")
                 
-                # Search regular web
-                web_results = self.search_web_scrape(query)
-                
-                # Also search government sites specifically
-                gov_results = self.search_canadian_gov_sites(query)
-                
-                all_results = web_results + gov_results
+                # Search using real web search
+                results = self.search_web_scrape(query)
                 
                 # Process results
-                for result in all_results:
+                for result in results:
                     lead = self.extract_lead_from_result(result, category)
                     if lead:
                         category_leads.append(lead)
@@ -611,16 +676,15 @@ class CanadianPublicSectorScraper:
                 print(f"\n  • {lead['organization']}")
                 print(f"    {lead['opportunity'][:80]}...")
                 print(f"    Deadline: {lead['deadline']} | {lead['tier']}")
+                print(f"    Analysis: {lead.get('critical_analysis', 'N/A')[:100]}...")
         else:
-            print("\n⚠️  No leads found in this search batch.")
+            print("\n⚠️  No leads found in this search.")
             print("   This could be due to:")
-            print("   - Rate limiting from search engines")
+            print("   - Search engines blocking automated requests")
             print("   - Network connectivity issues")
-            print("   - Search queries need refinement")
-            print("\n💡 Recommendations:")
-            print("   1. Set up Google Custom Search API for better results")
-            print("   2. Use a VPN or proxy to avoid rate limiting")
-            print("   3. Try again in a few minutes")
+            print("   - Need for more specific search terms")
+            print("\n💡 The system is configured to search real sources only.")
+            print("   NO SAMPLE DATA is being used as per user requirements.")
         
         print("="*70 + "\n")
         

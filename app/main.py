@@ -1,67 +1,75 @@
 from flask import Flask, jsonify
-from scraper import CanadianPublicSectorScraper
+from flask_cors import CORS
+from datetime import datetime
 import threading
 import time
+from scraper import CanadianPublicSectorScraper
 
 app = Flask(__name__)
+CORS(app)
 
-# Global variable to store leads
+# Global variables for caching
 leads_cache = []
 last_update = None
+update_lock = threading.Lock()
 
 def update_leads():
-    """Background function to update leads periodically"""
+    """Update leads from scraper"""
     global leads_cache, last_update
-    scraper = CanadianPublicSectorScraper()
     
-    while True:
-        try:
-            print("Updating leads...")
-            leads_cache = scraper.get_all_leads()
-            last_update = time.strftime('%Y-%m-%d %H:%M:%S')
-            print(f"Updated {len(leads_cache)} leads at {last_update}")
-        except Exception as e:
-            print(f"Error updating leads: {e}")
-        
-        # Wait 1 hour before next update
-        time.sleep(3600)
+    print("Updating leads...")
+    scraper = CanadianPublicSectorScraper()
+    new_leads = scraper.get_all_leads()
+    
+    with update_lock:
+        leads_cache = new_leads
+        last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    print(f"Updated {len(new_leads)} leads at {last_update}")
 
-# Start background thread for lead updates
-update_thread = threading.Thread(target=update_leads, daemon=True)
-update_thread.start()
+def background_update():
+    """Background thread to update leads periodically"""
+    while True:
+        time.sleep(3600)  # Update every hour
+        update_leads()
 
 @app.route('/api/leads')
 def get_leads():
-    """Return all cached leads"""
-    return jsonify({
-        'leads': leads_cache,
-        'last_update': last_update,
-        'total': len(leads_cache)
-    })
+    """Get all leads"""
+    with update_lock:
+        return jsonify({
+            'leads': leads_cache,
+            'last_update': last_update,
+            'count': len(leads_cache)
+        })
 
 @app.route('/api/refresh')
 def refresh_leads():
-    """Manually trigger lead refresh"""
-    global leads_cache, last_update
-    try:
-        scraper = CanadianPublicSectorScraper()
-        leads_cache = scraper.get_all_leads()
-        last_update = time.strftime('%Y-%m-%d %H:%M:%S')
-        return jsonify({
-            'status': 'success',
-            'message': f'Refreshed {len(leads_cache)} leads',
-            'last_update': last_update
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+    """Force refresh of leads"""
+    update_leads()
+    return jsonify({
+        'status': 'success',
+        'message': 'Leads refreshed',
+        'count': len(leads_cache),
+        'last_update': last_update
+    })
+
+@app.route('/health')
+def health():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'leads_count': len(leads_cache),
+        'last_update': last_update
+    })
 
 if __name__ == '__main__':
-    # Do initial load
-    scraper = CanadianPublicSectorScraper()
-    leads_cache = scraper.get_all_leads()
-    last_update = time.strftime('%Y-%m-%d %H:%M:%S')
+    # Initial load of leads when server starts
+    update_leads()
     
-    app.run(debug=True)
+    # Start background update thread
+    update_thread = threading.Thread(target=background_update, daemon=True)
+    update_thread.start()
+    
+    # Run Flask app
+    app.run(host='0.0.0.0', port=5000, debug=False)
