@@ -553,10 +553,10 @@ HTML_TEMPLATE = '''
                     case 'deadline':
                         return new Date(a.deadline) - new Date(b.deadline);
                     case 'budget':
-                        const getBudgetValue = (budget) => {
-                            const match = budget.match(/\$(\d+)M/);
-                            return match ? parseInt(match[1]) : 0;
-                        };
+                                                 const getBudgetValue = (budget) => {
+                             const match = budget.match(/\\$(\d+)M/);
+                             return match ? parseInt(match[1]) : 0;
+                         };
                         return getBudgetValue(b.budget_range) - getBudgetValue(a.budget_range);
                     case 'confidence':
                         return b.ai_confidence - a.ai_confidence;
