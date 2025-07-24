@@ -80,19 +80,36 @@ class CanadianPublicSectorScraper:
         soup = BeautifulSoup(html, 'html.parser')
         results = []
         
-        for item in soup.find_all('li', class_='b_algo'):
-            try:
-                link_elem = item.find('h2').find('a')
-                snippet_elem = item.find('div', class_='b_caption')
-                
-                if link_elem and snippet_elem:
-                    results.append({
-                        'title': link_elem.text.strip(),
-                        'link': link_elem.get('href', ''),
-                        'snippet': snippet_elem.text.strip()
-                    })
-            except:
-                continue
+        # Debug: Check if we're getting the right HTML
+        if 'b_algo' not in html:
+            print("       ⚠️ Warning: Bing HTML structure may have changed")
+            # Try alternative parsing
+            for item in soup.find_all(['div', 'li'], class_=['b_algo', 'b_results']):
+                try:
+                    link_elem = item.find('a')
+                    if link_elem and link_elem.text:
+                        snippet = item.text.strip()[:200]
+                        results.append({
+                            'title': link_elem.text.strip(),
+                            'link': link_elem.get('href', ''),
+                            'snippet': snippet
+                        })
+                except:
+                    continue
+        else:
+            for item in soup.find_all('li', class_='b_algo'):
+                try:
+                    link_elem = item.find('h2').find('a')
+                    snippet_elem = item.find('div', class_='b_caption')
+                    
+                    if link_elem and snippet_elem:
+                        results.append({
+                            'title': link_elem.text.strip(),
+                            'link': link_elem.get('href', ''),
+                            'snippet': snippet_elem.text.strip()
+                        })
+                except:
+                    continue
                 
         return results[:5]  # Limit results
     
@@ -190,6 +207,8 @@ class CanadianPublicSectorScraper:
         """Check if text indicates a training opportunity"""
         # Must have at least 2 training-related keywords
         keyword_count = sum(1 for keyword in self.training_keywords if keyword in text)
+        if keyword_count < 2:
+            print(f"         ❌ Not enough training keywords (found {keyword_count})")
         return keyword_count >= 2
     
     def _is_canadian_public_sector(self, text, link):
@@ -419,6 +438,7 @@ class CanadianPublicSectorScraper:
                     lead = self.extract_lead_from_result(result, category)
                     if lead:
                         category_leads.append(lead)
+                        print(f"       ✅ Found lead: {lead['organization']} - {lead['opportunity'][:60]}...")
                 
                 # Respectful delay between searches
                 time.sleep(random.uniform(2, 3))
