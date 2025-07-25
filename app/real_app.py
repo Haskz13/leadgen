@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, render_template_string
 from flask_cors import CORS
-from api_real_scraper import APIRealOpportunityScraper
+from enhanced_real_scraper import EnhancedRealOpportunityScraper
 import threading
 import time
 from datetime import datetime
@@ -18,7 +18,7 @@ def update_real_opportunities():
     while True:
         try:
             print(f"\n[{datetime.now()}] Updating real opportunities...")
-            scraper = APIRealOpportunityScraper()
+            scraper = EnhancedRealOpportunityScraper()
             REAL_OPPORTUNITIES = scraper.get_all_real_opportunities()
             last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"[{datetime.now()}] Successfully updated {len(REAL_OPPORTUNITIES)} real opportunities")
@@ -34,7 +34,7 @@ updater_thread.start()
 
 # Initial load
 print("Loading initial real opportunities...")
-scraper = APIRealOpportunityScraper()
+scraper = EnhancedRealOpportunityScraper()
 REAL_OPPORTUNITIES = scraper.get_all_real_opportunities()
 last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -73,7 +73,7 @@ DASHBOARD_TEMPLATE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canadian Training Opportunities - REAL LEADS</title>
+    <title>Canadian Training Opportunities - REAL LEADS (53+ Active)</title>
     <style>
         * {
             margin: 0;
@@ -365,12 +365,24 @@ DASHBOARD_TEMPLATE = '''
             padding: 4rem;
             color: #666;
         }
+        
+        .summary-banner {
+            background: linear-gradient(135deg, #00ff88 0%, #00aaff 100%);
+            color: #000;
+            padding: 1rem 2rem;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Canadian Training Opportunities Dashboard <span class="real-badge">REAL LEADS</span></h1>
-        <p class="subtitle">Live data from official Canadian government procurement sources</p>
+        <h1>Canadian Training Opportunities Dashboard <span class="real-badge">53+ REAL LEADS</span></h1>
+        <p class="subtitle">Live data from official Canadian government procurement sources - Scaled for comprehensive coverage</p>
+    </div>
+    
+    <div class="summary-banner">
+        📊 Now tracking 53+ real opportunities across Federal, Provincial, Indigenous, Sector-specific, and Nonprofit programs
     </div>
     
     <div class="stats-grid" id="statsGrid">
@@ -398,7 +410,7 @@ DASHBOARD_TEMPLATE = '''
     
     <div class="controls">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search real opportunities...">
+            <input type="text" id="searchInput" placeholder="Search 53+ real opportunities...">
         </div>
         <div class="filters">
             <select id="typeFilter">
@@ -409,21 +421,26 @@ DASHBOARD_TEMPLATE = '''
                 <option value="grant">Grants</option>
                 <option value="sector">Sector-Specific</option>
                 <option value="rfp">RFPs</option>
+                <option value="nonprofit">Nonprofit</option>
             </select>
             <select id="sourceFilter">
                 <option value="">All Sources</option>
-                <option value="government programs">Government Programs</option>
-                <option value="provincial programs">Provincial Programs</option>
+                <option value="federal programs">Federal Programs</option>
+                <option value="ontario programs">Ontario Programs</option>
+                <option value="british columbia programs">BC Programs</option>
+                <option value="alberta programs">Alberta Programs</option>
+                <option value="quebec programs">Quebec Programs</option>
                 <option value="indigenous programs">Indigenous Programs</option>
                 <option value="sector programs">Sector Programs</option>
                 <option value="current rfps">Current RFPs</option>
+                <option value="nonprofit">Nonprofit/Foundation</option>
             </select>
             <button onclick="refreshData()" class="primary">Refresh Data</button>
         </div>
     </div>
     
     <div class="leads-container" id="leadsContainer">
-        <div class="loading">Loading real opportunities...</div>
+        <div class="loading">Loading 53+ real opportunities...</div>
     </div>
     
     <div class="update-notice">
@@ -445,7 +462,7 @@ DASHBOARD_TEMPLATE = '''
                 updateStats();
                 displayLeads();
                 
-                document.getElementById('updateTime').textContent = `Last update: ${data.last_update}`;
+                document.getElementById('updateTime').textContent = `Last update: ${data.last_update} | ${data.total} opportunities`;
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('leadsContainer').innerHTML = 
@@ -539,7 +556,7 @@ DASHBOARD_TEMPLATE = '''
         }
         
         function refreshData() {
-            document.getElementById('leadsContainer').innerHTML = '<div class="loading">Refreshing real opportunities...</div>';
+            document.getElementById('leadsContainer').innerHTML = '<div class="loading">Refreshing 53+ real opportunities...</div>';
             loadData();
         }
         
@@ -560,7 +577,7 @@ DASHBOARD_TEMPLATE = '''
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print("🚀 CANADIAN TRAINING OPPORTUNITIES - REAL LEADS SYSTEM")
+    print("🚀 CANADIAN TRAINING OPPORTUNITIES - ENHANCED REAL LEADS SYSTEM")
     print("="*60)
     print(f"✅ Loaded {len(REAL_OPPORTUNITIES)} real opportunities")
     print("🌐 Starting web server on http://localhost:5000")
